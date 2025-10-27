@@ -80,14 +80,11 @@
 
         <el-table-column prop="format" label="格式" width="120">
           <template #default="{ row }">
-            <el-tag
-              v-for="fmt in row.format"
-              :key="fmt"
-              size="small"
-              style="margin-right: 4px"
-            >
-              {{ fmt.toUpperCase() }}
-            </el-tag>
+            <span v-for="fmt in row.format" :key="fmt" class="format-tag">
+              <el-tag size="small">
+                {{ fmt.toUpperCase() }}
+              </el-tag>
+            </span>
           </template>
         </el-table-column>
 
@@ -411,6 +408,11 @@ const getClassificationTagType = classification => {
     &:hover {
       text-decoration: underline;
     }
+  }
+
+  .format-tag {
+    display: inline-block;
+    margin-right: 4px;
   }
 
   .pagination {
