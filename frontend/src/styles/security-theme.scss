@@ -1,0 +1,660 @@
+// 安全运营中心主题设计系统
+// Security Operations Center Theme Design System
+
+// ============================================
+// 1. 颜色系统 (Color System)
+// ============================================
+
+:root {
+  // 主色调 - 科技蓝
+  --primary-color: #409EFF;
+  --primary-light-1: #53a8ff;
+  --primary-light-2: #66b1ff;
+  --primary-light-3: #79bbff;
+  --primary-light-4: #8cc5ff;
+  --primary-light-5: #a0cfff;
+  --primary-light-6: #b3d8ff;
+  --primary-light-7: #c6e2ff;
+  --primary-light-8: #d9ecff;
+  --primary-light-9: #ecf5ff;
+  --primary-dark-1: #3a8edc;
+  --primary-dark-2: #337ecc;
+
+  // 危险色 - 威胁红
+  --danger-color: #F56C6C;
+  --danger-light: #f89898;
+  --danger-lighter: #fbc4c4;
+  --danger-extra-light: #fde2e2;
+  --danger-dark: #dd5757;
+
+  // 警告色 - 警示橙
+  --warning-color: #E6A23C;
+  --warning-light: #ebb563;
+  --warning-lighter: #f0c78a;
+  --warning-extra-light: #f5dab1;
+  --warning-dark: #cf9236;
+
+  // 成功色 - 安全绿
+  --success-color: #67C23A;
+  --success-light: #85ce61;
+  --success-lighter: #a4da89;
+  --success-extra-light: #c2e7b0;
+  --success-dark: #5daf34;
+
+  // 信息色 - 数据青
+  --info-color: #909399;
+  --info-light: #a6a9ad;
+  --info-lighter: #b1b3b8;
+  --info-extra-light: #c8c9cc;
+  --info-dark: #82848a;
+
+  // 中性色
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #C0C4CC;
+  --border-base: #DCDFE6;
+  --border-light: #E4E7ED;
+  --border-lighter: #EBEEF5;
+  --border-extra-light: #F2F6FC;
+  --fill-base: #F0F2F5;
+  --fill-light: #F5F7FA;
+  --fill-lighter: #FAFBFC;
+  --fill-extra-light: #FAFBFC;
+  --blank: #FFFFFF;
+
+  // 安全等级色彩
+  --severity-critical: #8B0000;     // 深红 - 严重
+  --severity-high: #FF4500;         // 橙红 - 高危
+  --severity-medium: #FFA500;       // 橙色 - 中危
+  --severity-low: #FFD700;          // 金色 - 低危
+  --severity-info: #87CEEB;         // 天蓝 - 信息
+
+  // 渐变色
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-danger: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-success: linear-gradient(135deg, #96fbc4 0%, #f9f586 100%);
+  --gradient-dark: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  --gradient-cyberpunk: linear-gradient(135deg, #00d2ff 0%, #3a47d5 100%);
+
+  // 阴影系统
+  --shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+  --shadow-dark: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.12);
+  --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+  // 动画时长
+  --transition-fast: 0.2s;
+  --transition-base: 0.3s;
+  --transition-slow: 0.5s;
+
+  // 圆角系统
+  --radius-base: 4px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  --radius-extra-large: 16px;
+  --radius-round: 24px;
+
+  // 间距系统
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-xxxl: 32px;
+}
+
+// ============================================
+// 2. 暗黑模式 (Dark Mode)
+// ============================================
+
+[data-theme="dark"] {
+  // 背景色调整
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #141824;
+  --bg-tertiary: #1e2330;
+  --bg-elevated: #252a3a;
+  --bg-card: rgba(30, 30, 30, 0.95);
+
+  // 文字颜色调整
+  --text-primary: #f0f0f0;
+  --text-regular: #d0d0d0;
+  --text-secondary: #a0a0a0;
+  --text-placeholder: #606060;
+
+  // 边框颜色调整
+  --border-base: #404040;
+  --border-light: #353535;
+  --border-lighter: #2a2a2a;
+  --border-extra-light: #1f1f1f;
+
+  // 填充色调整
+  --fill-base: #1a1a1a;
+  --fill-light: #151515;
+  --fill-lighter: #101010;
+  --fill-extra-light: #0a0a0a;
+
+  // 主色调调整
+  --primary-color: #58a6ff;
+  --danger-color: #f85149;
+  --warning-color: #fb8500;
+  --success-color: #56d364;
+  --info-color: #8b949e;
+
+  // 特殊效果
+  --glow-primary: 0 0 20px rgba(88, 166, 255, 0.5);
+  --glow-danger: 0 0 20px rgba(248, 81, 73, 0.5);
+  --glow-success: 0 0 20px rgba(86, 211, 100, 0.5);
+
+  // 渐变调整
+  --gradient-dark-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --gradient-dark-secondary: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+  --gradient-dark-accent: linear-gradient(135deg, #e94560 0%, #0f3460 100%);
+}
+
+// ============================================
+// 3. 全局样式 (Global Styles)
+// ============================================
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  color: var(--text-regular);
+  background: var(--fill-lighter);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ============================================
+// 4. 组件样式 (Component Styles)
+// ============================================
+
+// 卡片组件
+.soc-card {
+  background: var(--blank);
+  border-radius: var(--radius-large);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-base) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid var(--border-lighter);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  &--glass {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+  }
+
+  &--gradient {
+    background: var(--gradient-primary);
+    color: white;
+  }
+
+  &--dark {
+    background: var(--bg-card);
+    border-color: var(--border-base);
+  }
+}
+
+// 按钮增强
+.soc-button {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width var(--transition-slow), height var(--transition-slow);
+  }
+
+  &:active::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  &--glow {
+    &:hover {
+      box-shadow: var(--glow-primary);
+    }
+  }
+
+  &--cyber {
+    background: linear-gradient(45deg, #00d2ff, #3a47d5);
+    border: none;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #00d2ff, #3a47d5, #00d2ff);
+      z-index: -1;
+      filter: blur(10px);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    &:hover::after {
+      opacity: 1;
+    }
+  }
+}
+
+// 输入框增强
+.soc-input {
+  background: var(--fill-lighter);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md) var(--spacing-lg);
+  transition: all var(--transition-base);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: var(--blank);
+    box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
+  }
+
+  &--glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-color: rgba(255, 255, 255, 0.2);
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+// 标签样式
+.soc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-round);
+  font-size: 12px;
+  font-weight: 600;
+
+  &--critical {
+    background: var(--severity-critical);
+    color: white;
+  }
+
+  &--high {
+    background: var(--severity-high);
+    color: white;
+  }
+
+  &--medium {
+    background: var(--severity-medium);
+    color: var(--text-primary);
+  }
+
+  &--low {
+    background: var(--severity-low);
+    color: var(--text-primary);
+  }
+
+  &--info {
+    background: var(--severity-info);
+    color: var(--text-primary);
+  }
+}
+
+// ============================================
+// 5. 动画库 (Animation Library)
+// ============================================
+
+// 淡入
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// 滑入
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// 缩放
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// 脉冲
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// 闪烁
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// 旋转
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 波纹
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+// 故障效果
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+// ============================================
+// 6. 工具类 (Utility Classes)
+// ============================================
+
+// 动画工具类
+.animate-fadeIn {
+  animation: fadeIn var(--transition-base);
+}
+
+.animate-slideIn {
+  animation: slideInUp var(--transition-base);
+}
+
+.animate-scaleIn {
+  animation: scaleIn var(--transition-base);
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
+.animate-rotate {
+  animation: rotate 2s linear infinite;
+}
+
+.animate-glitch {
+  animation: glitch 0.3s infinite;
+}
+
+// 文字渐变
+.text-gradient {
+  background: var(--gradient-primary);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+// 玻璃效果
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+// 霓虹发光
+.neon-glow {
+  text-shadow: 0 0 10px currentColor,
+               0 0 20px currentColor,
+               0 0 30px currentColor,
+               0 0 40px currentColor;
+}
+
+// 安全状态指示器
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+
+  &--online {
+    background: var(--success-color);
+    animation: pulse 2s infinite;
+  }
+
+  &--offline {
+    background: var(--info-color);
+  }
+
+  &--warning {
+    background: var(--warning-color);
+    animation: blink 1s infinite;
+  }
+
+  &--danger {
+    background: var(--danger-color);
+    animation: blink 0.5s infinite;
+  }
+}
+
+// ============================================
+// 7. 响应式断点 (Responsive Breakpoints)
+// ============================================
+
+// 断点定义
+$breakpoint-xs: 480px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 992px;
+$breakpoint-lg: 1200px;
+$breakpoint-xl: 1920px;
+
+// Mixin
+@mixin mobile {
+  @media (max-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: $breakpoint-sm) and (max-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin wide {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+// ============================================
+// 8. 滚动条美化 (Custom Scrollbar)
+// ============================================
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--fill-lighter);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-base);
+  border-radius: 4px;
+  transition: background var(--transition-base);
+
+  &:hover {
+    background: var(--border-dark);
+  }
+}
+
+// 暗黑模式滚动条
+[data-theme="dark"] {
+  ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+
+    &:hover {
+      background: var(--primary-color);
+    }
+  }
+}
+
+// ============================================
+// 9. 打印样式 (Print Styles)
+// ============================================
+
+@media print {
+  * {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+// ============================================
+// 10. 辅助功能 (Accessibility)
+// ============================================
+
+// 焦点样式
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+// 跳转链接
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary-color);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  text-decoration: none;
+  z-index: 100;
+
+  &:focus {
+    top: 0;
+  }
+}
+
+// 屏幕阅读器专用
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

@@ -1,0 +1,331 @@
+# SOC Platform Security Scanning Rules Configuration
+# This file defines the scanning policies and rules for different scan types
+
+version: 1.0
+last_updated: 2025-09-28
+
+# Global scan settings
+global:
+  max_concurrent_scans: 5
+  default_timeout: 3600  # 1 hour in seconds
+  rate_limiting:
+    requests_per_second: 10
+    burst_size: 50
+  output_format: json
+  save_results: true
+  results_retention_days: 90
+
+# Subdomain enumeration rules
+subdomain_enumeration:
+  enabled: true
+  tools:
+    - name: subfinder
+      priority: 1
+      options:
+        - "-all"  # Use all sources
+        - "-recursive"  # Recursive enumeration
+        - "-t 50"  # 50 threads
+    - name: sublist3r
+      priority: 2
+      options:
+        - "-b"  # Enable bruteforce
+        - "-t 30"  # 30 threads
+    - name: amass
+      priority: 3
+      enabled: false  # Disabled by default due to resource usage
+  wordlists:
+    - subdomains-top1million-5000.txt
+    - custom-subdomains.txt
+  verification:
+    check_alive: true
+    resolve_dns: true
+    check_wildcard: true
+
+# Port scanning rules
+port_scanning:
+  enabled: true
+  default_ports: "21,22,23,25,53,80,110,111,135,139,143,443,445,993,995,1723,3306,3389,5900,8080,8443"
+  scan_profiles:
+    quick:
+      ports: "80,443,8080,8443"
+      timeout: 300
+      aggressive: false
+    standard:
+      ports: "1-1000"
+      timeout: 600
+      aggressive: false
+    full:
+      ports: "1-65535"
+      timeout: 3600
+      aggressive: true
+  tools:
+    - name: naabu
+      priority: 1
+      options:
+        - "-rate 1000"  # Scan rate
+        - "-c 50"  # Concurrent hosts
+        - "-nmap-cli 'nmap -sV'"  # Service detection
+    - name: nmap
+      priority: 2
+      enabled: false
+      options:
+        - "-sS"  # SYN scan
+        - "-sV"  # Service version detection
+        - "-O"  # OS detection
+    - name: masscan
+      priority: 3
+      enabled: false
+      options:
+        - "--rate=1000"
+        - "--wait=0"
+
+# Vulnerability scanning rules
+vulnerability_scanning:
+  enabled: true
+  severity_levels:
+    - critical
+    - high
+    - medium
+    - low
+    - info
+  scan_profiles:
+    critical_only:
+      severities: ["critical"]
+      categories: ["cve", "rce", "sqli"]
+      aggressive: false
+    standard:
+      severities: ["critical", "high", "medium"]
+      categories: ["cve", "owasp-top10", "misconfig"]
+      aggressive: false
+    comprehensive:
+      severities: ["critical", "high", "medium", "low"]
+      categories: ["all"]
+      aggressive: true
+  tools:
+    - name: nuclei
+      priority: 1
+      templates:
+        - "cves/"
+        - "vulnerabilities/"
+        - "exposed-panels/"
+        - "exposures/"
+        - "misconfiguration/"
+        - "default-logins/"
+        - "takeovers/"
+      options:
+        - "-stats"  # Show statistics
+        - "-bulk-size 50"  # Bulk size
+        - "-c 50"  # Concurrency
+        - "-rl 150"  # Rate limit
+        - "-timeout 10"  # Timeout per request
+      update_templates: true
+      custom_templates_path: "/tools/nuclei/custom-templates"
+
+# Web technology detection rules
+technology_detection:
+  enabled: true
+  tools:
+    - name: httpx
+      priority: 1
+      options:
+        - "-tech-detect"  # Technology detection
+        - "-status-code"  # Show status codes
+        - "-title"  # Extract titles
+        - "-web-server"  # Detect web server
+        - "-content-type"  # Show content types
+        - "-cdn"  # Detect CDN
+        - "-method GET"  # Use GET method
+    - name: wappalyzer
+      priority: 2
+      enabled: false
+    - name: whatweb
+      priority: 3
+      enabled: false
+      aggression_level: 3  # 1-4, higher is more aggressive
+
+# Web crawling rules
+web_crawling:
+  enabled: true
+  max_depth: 3
+  max_pages: 1000
+  respect_robots_txt: true
+  user_agent: "SOC-Scanner/1.0"
+  tools:
+    - name: katana
+      priority: 1
+      options:
+        - "-jc"  # JavaScript crawling
+        - "-kf all"  # Known files
+        - "-ef ttf,woff,woff2,ico,css,png,jpg,jpeg,gif,svg"  # Exclude extensions
+        - "-c 10"  # Concurrency
+        - "-p 10"  # Parallelism
+        - "-rl 100"  # Rate limit
+        - "-timeout 15"  # Timeout
+    - name: gau
+      priority: 2
+      options:
+        - "--threads 10"
+        - "--blacklist ttf,woff,woff2,ico,css,png,jpg,jpeg,gif,svg"
+    - name: waybackurls
+      priority: 3
+      enabled: false
+
+# Directory and file discovery rules
+directory_discovery:
+  enabled: true
+  wordlists:
+    small: "common.txt"
+    medium: "directory-list-2.3-medium.txt"
+    large: "directory-list-2.3-big.txt"
+  extensions:
+    - php
+    - asp
+    - aspx
+    - jsp
+    - html
+    - js
+    - txt
+    - xml
+    - json
+    - yml
+    - yaml
+    - conf
+    - config
+    - bak
+    - backup
+    - old
+    - db
+    - sql
+    - log
+    - zip
+    - tar
+    - gz
+  tools:
+    - name: dirsearch
+      priority: 1
+      options:
+        - "-t 20"  # Threads
+        - "-r"  # Recursive
+        - "--exclude-status=404,403"
+    - name: gobuster
+      priority: 2
+      enabled: false
+      options:
+        - "-t 50"
+        - "-k"  # Skip SSL verification
+
+# SSL/TLS scanning rules
+ssl_scanning:
+  enabled: true
+  check_items:
+    - certificate_validity
+    - certificate_chain
+    - weak_ciphers
+    - ssl_vulnerabilities
+    - protocol_versions
+  tools:
+    - name: testssl
+      priority: 1
+      enabled: false
+    - name: sslyze
+      priority: 2
+      enabled: false
+
+# API scanning rules
+api_scanning:
+  enabled: true
+  swagger_detection: true
+  graphql_detection: true
+  rest_methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - PATCH
+    - OPTIONS
+  authentication_types:
+    - none
+    - api_key
+    - bearer_token
+    - basic_auth
+    - oauth2
+
+# Compliance scanning rules
+compliance_scanning:
+  enabled: true
+  standards:
+    - name: "OWASP Top 10"
+      enabled: true
+      version: "2021"
+    - name: "CIS Benchmarks"
+      enabled: false
+    - name: "PCI DSS"
+      enabled: false
+    - name: "HIPAA"
+      enabled: false
+    - name: "GDPR"
+      enabled: false
+
+# Custom scan chains
+scan_chains:
+  recon:
+    description: "Full reconnaissance scan"
+    steps:
+      - subdomain_enumeration
+      - port_scanning
+      - technology_detection
+      - directory_discovery
+  web_assessment:
+    description: "Comprehensive web application assessment"
+    steps:
+      - technology_detection
+      - web_crawling
+      - directory_discovery
+      - vulnerability_scanning
+      - ssl_scanning
+  quick_audit:
+    description: "Quick security audit"
+    steps:
+      - port_scanning:quick
+      - technology_detection
+      - vulnerability_scanning:critical_only
+
+# Alert rules
+alerts:
+  enabled: true
+  channels:
+    - email
+    - webhook
+    - syslog
+  severity_thresholds:
+    critical: immediate
+    high: 15_minutes
+    medium: 1_hour
+    low: daily_summary
+  conditions:
+    - name: "Critical Vulnerability Found"
+      trigger: "vulnerability.severity == 'critical'"
+      action: "alert:immediate"
+    - name: "Multiple High Severity Issues"
+      trigger: "count(vulnerability.severity == 'high') > 5"
+      action: "alert:immediate"
+    - name: "Exposed Admin Panel"
+      trigger: "finding.type == 'exposed_panel' && finding.name contains 'admin'"
+      action: "alert:high"
+
+# Reporting configuration
+reporting:
+  formats:
+    - json
+    - html
+    - pdf
+    - csv
+    - markdown
+  include_sections:
+    - executive_summary
+    - technical_details
+    - vulnerability_list
+    - remediation_recommendations
+    - appendix
+  auto_generate: true
+  template_path: "/tools/report-templates/"

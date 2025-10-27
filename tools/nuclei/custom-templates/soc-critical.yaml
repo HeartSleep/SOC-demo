@@ -1,0 +1,55 @@
+id: soc-critical-vulns
+info:
+  name: SOC Platform Critical Vulnerability Detection
+  author: SOC Security Team
+  severity: critical
+  description: Custom critical vulnerability detection rules for SOC platform
+  tags: soc,critical,custom
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}/admin"
+      - "{{BaseURL}}/administrator"
+      - "{{BaseURL}}/admin.php"
+      - "{{BaseURL}}/wp-admin"
+      - "{{BaseURL}}/phpmyadmin"
+      - "{{BaseURL}}/adminer.php"
+      - "{{BaseURL}}/.env"
+      - "{{BaseURL}}/config.php"
+      - "{{BaseURL}}/configuration.php"
+      - "{{BaseURL}}/web.config"
+      - "{{BaseURL}}/.git/config"
+      - "{{BaseURL}}/.svn/entries"
+      - "{{BaseURL}}/backup.sql"
+      - "{{BaseURL}}/database.sql"
+      - "{{BaseURL}}/db_backup.sql"
+      - "{{BaseURL}}/dump.sql"
+      - "{{BaseURL}}/.htaccess"
+      - "{{BaseURL}}/.htpasswd"
+      - "{{BaseURL}}/server-status"
+      - "{{BaseURL}}/server-info"
+
+    matchers-condition: or
+    matchers:
+      - type: status
+        status:
+          - 200
+          - 301
+          - 302
+
+      - type: word
+        words:
+          - "Index of"
+          - "Directory listing"
+          - "Parent Directory"
+        part: body
+
+      - type: regex
+        regex:
+          - "(?i)(password|passwd|pwd)\\s*[=:]"
+          - "(?i)(api[_-]?key|apikey)\\s*[=:]"
+          - "(?i)(secret[_-]?key|secretkey)\\s*[=:]"
+          - "(?i)(access[_-]?key|accesskey)\\s*[=:]"
+          - "(?i)(private[_-]?key|privatekey)"
+        part: body

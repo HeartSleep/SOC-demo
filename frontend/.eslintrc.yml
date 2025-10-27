@@ -1,0 +1,120 @@
+# ESLint Configuration for SOC Platform
+root: true
+
+env:
+  browser: true
+  es2021: true
+  node: true
+
+extends:
+  - 'eslint:recommended'
+  - '@vue/eslint-config-typescript'
+  - '@vue/eslint-config-prettier'
+  - 'plugin:vue/vue3-recommended'
+
+parserOptions:
+  ecmaVersion: 2021
+  sourceType: module
+
+plugins:
+  - vue
+  - '@typescript-eslint'
+
+rules:
+  # Vue specific rules
+  'vue/multi-word-component-names': 'off'
+  'vue/no-v-html': 'off'
+  'vue/require-default-prop': 'off'
+  'vue/require-explicit-emits': 'off'
+  'vue/html-self-closing':
+    - 'error'
+    -
+      html:
+        void: 'always'
+        normal: 'always'
+        component: 'always'
+      svg: 'always'
+      math: 'always'
+  'vue/max-attributes-per-line':
+    - 'error'
+    -
+      singleline: 3
+      multiline: 1
+  'vue/singleline-html-element-content-newline': 'off'
+  'vue/multiline-html-element-content-newline': 'off'
+  'vue/component-name-in-template-casing':
+    - 'error'
+    - 'PascalCase'
+  'vue/component-definition-name-casing':
+    - 'error'
+    - 'PascalCase'
+
+  # TypeScript rules
+  '@typescript-eslint/no-unused-vars':
+    - 'error'
+    -
+      argsIgnorePattern: '^_'
+      varsIgnorePattern: '^_'
+  '@typescript-eslint/no-explicit-any': 'off'
+  '@typescript-eslint/no-non-null-assertion': 'off'
+  '@typescript-eslint/no-empty-function': 'off'
+  '@typescript-eslint/ban-ts-comment': 'off'
+
+  # General rules
+  'no-console':
+    - 'warn'
+    -
+      allow:
+        - 'warn'
+        - 'error'
+  'no-debugger': 'warn'
+  'no-unused-vars': 'off' # Handled by @typescript-eslint/no-unused-vars
+  'prefer-const': 'error'
+  'no-var': 'error'
+  'object-shorthand': 'error'
+  'prefer-arrow-callback': 'error'
+  'prefer-template': 'error'
+  'quotes':
+    - 'error'
+    - 'single'
+    -
+      avoidEscape: true
+      allowTemplateLiterals: true
+  'semi':
+    - 'error'
+    - 'never'
+  'comma-dangle':
+    - 'error'
+    - 'never'
+  'space-before-function-paren':
+    - 'error'
+    -
+      anonymous: 'never'
+      named: 'never'
+      asyncArrow: 'always'
+  'keyword-spacing': 'error'
+  'space-infix-ops': 'error'
+  'eol-last': 'error'
+  'no-trailing-spaces': 'error'
+  'no-multiple-empty-lines':
+    - 'error'
+    -
+      max: 1
+      maxEOF: 1
+  'object-curly-spacing':
+    - 'error'
+    - 'always'
+  'array-bracket-spacing':
+    - 'error'
+    - 'never'
+  'indent':
+    - 'error'
+    - 2
+    -
+      SwitchCase: 1
+
+globals:
+  defineEmits: readonly
+  defineProps: readonly
+  defineExpose: readonly
+  withDefaults: readonly

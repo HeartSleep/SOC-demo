@@ -1,0 +1,460 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build: ./gateway
+    container_name: soc-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=info
+    depends_on:
+      - redis
+      - consul
+    networks:
+      - soc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gateway.rule=Host(`api.soc-platform.local`)"
+      - "traefik.http.services.gateway.loadbalancer.server.port=8080"
+
+  # Service Discovery & Configuration
+  consul:
+    image: consul:latest
+    container_name: soc-consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    volumes:
+      - consul-data:/consul/data
+    networks:
+      - soc-network
+    command: "agent -server -ui -bootstrap-expect=1 -client=0.0.0.0"
+
+  # User Service
+  user-service:
+    build: ./services/user
+    container_name: soc-user-service
+    environment:
+      - SERVICE_NAME=user-service
+      - SERVICE_PORT=8001
+      - DATABASE_URL=postgresql://postgres:password@user-db:5432/users
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - user-db
+      - redis
+      - consul
+    networks:
+      - soc-network
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # Asset Service
+  asset-service:
+    build: ./services/asset
+    container_name: soc-asset-service
+    environment:
+      - SERVICE_NAME=asset-service
+      - SERVICE_PORT=8002
+      - DATABASE_URL=postgresql://postgres:password@asset-db:5432/assets
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - asset-db
+      - redis
+      - consul
+    networks:
+      - soc-network
+    deploy:
+      replicas: 2
+
+  # Vulnerability Service
+  vulnerability-service:
+    build: ./services/vulnerability
+    container_name: soc-vulnerability-service
+    environment:
+      - SERVICE_NAME=vulnerability-service
+      - SERVICE_PORT=8003
+      - DATABASE_URL=postgresql://postgres:password@vuln-db:5432/vulnerabilities
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - vuln-db
+      - redis
+      - consul
+    networks:
+      - soc-network
+    deploy:
+      replicas: 2
+
+  # Scanning Service
+  scanning-service:
+    build: ./services/scanning
+    container_name: soc-scanning-service
+    environment:
+      - SERVICE_NAME=scanning-service
+      - SERVICE_PORT=8004
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - rabbitmq
+      - redis
+      - consul
+    networks:
+      - soc-network
+    deploy:
+      replicas: 3
+
+  # Notification Service
+  notification-service:
+    build: ./services/notification
+    container_name: soc-notification-service
+    environment:
+      - SERVICE_NAME=notification-service
+      - SERVICE_PORT=8005
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    depends_on:
+      - rabbitmq
+      - redis
+      - consul
+    networks:
+      - soc-network
+
+  # Analytics Service
+  analytics-service:
+    build: ./services/analytics
+    container_name: soc-analytics-service
+    environment:
+      - SERVICE_NAME=analytics-service
+      - SERVICE_PORT=8006
+      - CLICKHOUSE_URL=clickhouse://clickhouse:9000
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - clickhouse
+      - redis
+      - consul
+    networks:
+      - soc-network
+
+  # Reporting Service
+  reporting-service:
+    build: ./services/reporting
+    container_name: soc-reporting-service
+    environment:
+      - SERVICE_NAME=reporting-service
+      - SERVICE_PORT=8007
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - redis
+      - consul
+    networks:
+      - soc-network
+
+  # Monitoring Service
+  monitoring-service:
+    build: ./services/monitoring
+    container_name: soc-monitoring-service
+    environment:
+      - SERVICE_NAME=monitoring-service
+      - SERVICE_PORT=8008
+      - PROMETHEUS_URL=http://prometheus:9090
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - prometheus
+      - elasticsearch
+      - consul
+    networks:
+      - soc-network
+
+  # Compliance Service
+  compliance-service:
+    build: ./services/compliance
+    container_name: soc-compliance-service
+    environment:
+      - SERVICE_NAME=compliance-service
+      - SERVICE_PORT=8009
+      - DATABASE_URL=postgresql://postgres:password@compliance-db:5432/compliance
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - compliance-db
+      - consul
+    networks:
+      - soc-network
+
+  # Threat Intelligence Service
+  threat-intel-service:
+    build: ./services/threat-intel
+    container_name: soc-threat-intel-service
+    environment:
+      - SERVICE_NAME=threat-intel-service
+      - SERVICE_PORT=8010
+      - MONGODB_URL=mongodb://mongodb:27017/threat_intel
+      - REDIS_URL=redis://redis:6379
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - mongodb
+      - redis
+      - consul
+    networks:
+      - soc-network
+
+  # Databases
+  user-db:
+    image: postgres:14-alpine
+    container_name: soc-user-db
+    environment:
+      - POSTGRES_DB=users
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - soc-network
+
+  asset-db:
+    image: postgres:14-alpine
+    container_name: soc-asset-db
+    environment:
+      - POSTGRES_DB=assets
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - asset-db-data:/var/lib/postgresql/data
+    networks:
+      - soc-network
+
+  vuln-db:
+    image: postgres:14-alpine
+    container_name: soc-vuln-db
+    environment:
+      - POSTGRES_DB=vulnerabilities
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - vuln-db-data:/var/lib/postgresql/data
+    networks:
+      - soc-network
+
+  compliance-db:
+    image: postgres:14-alpine
+    container_name: soc-compliance-db
+    environment:
+      - POSTGRES_DB=compliance
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - compliance-db-data:/var/lib/postgresql/data
+    networks:
+      - soc-network
+
+  # Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: soc-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - soc-network
+
+  # Cache
+  redis:
+    image: redis:7-alpine
+    container_name: soc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - soc-network
+    command: redis-server --appendonly yes
+
+  # NoSQL Database
+  mongodb:
+    image: mongo:6
+    container_name: soc-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - soc-network
+
+  # Analytics Database
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: soc-clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    networks:
+      - soc-network
+
+  # Search Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: soc-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - soc-network
+
+  # Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: soc-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - soc-network
+
+  # Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: soc-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - soc-network
+
+  # Log Aggregation
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: soc-logstash
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    volumes:
+      - ./monitoring/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    depends_on:
+      - elasticsearch
+    networks:
+      - soc-network
+
+  # Visualization for Logs
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: soc-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - soc-network
+
+  # Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: soc-jaeger
+    ports:
+      - "16686:16686"
+      - "6831:6831/udp"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    networks:
+      - soc-network
+
+  # Load Balancer / Reverse Proxy
+  traefik:
+    image: traefik:v2.10
+    container_name: soc-traefik
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/dynamic.yml:/dynamic.yml
+      - traefik-certs:/certs
+    networks:
+      - soc-network
+
+networks:
+  soc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  consul-data:
+  user-db-data:
+  asset-db-data:
+  vuln-db-data:
+  compliance-db-data:
+  rabbitmq-data:
+  redis-data:
+  mongodb-data:
+  clickhouse-data:
+  elasticsearch-data:
+  prometheus-data:
+  grafana-data:
+  traefik-certs:

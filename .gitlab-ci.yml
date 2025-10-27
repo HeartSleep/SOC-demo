@@ -1,0 +1,210 @@
+# GitLab CI/CD Configuration for SOC Platform
+
+stages:
+  - test
+  - security
+  - build
+  - deploy
+
+variables:
+  DOCKER_REGISTRY: $CI_REGISTRY
+  DOCKER_IMAGE_BACKEND: $CI_REGISTRY_IMAGE/backend
+  DOCKER_IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "18"
+
+# Cache configuration
+cache:
+  paths:
+    - backend/.cache/pip
+    - frontend/node_modules/
+    - frontend/.npm/
+
+# Backend Tests
+backend-test:
+  stage: test
+  image: python:$PYTHON_VERSION
+  services:
+    - name: mongo:6.0
+      alias: mongodb
+      variables:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: testpass
+    - name: redis:7-alpine
+      alias: redis
+  variables:
+    MONGODB_URL: mongodb://admin:testpass@mongodb:27017/soc_platform_test?authSource=admin
+    REDIS_URL: redis://redis:6379/0
+    SECRET_KEY: test-secret-key
+    JWT_SECRET_KEY: test-jwt-secret
+  before_script:
+    - cd backend
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install pytest pytest-asyncio httpx pytest-cov
+  script:
+    - flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
+    - mypy app --ignore-missing-imports
+    - pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+  coverage: '/TOTAL.+?(\d+\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage.xml
+    paths:
+      - backend/htmlcov/
+    expire_in: 30 days
+
+# Frontend Tests
+frontend-test:
+  stage: test
+  image: node:$NODE_VERSION
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm run lint
+    - npm run type-check
+    - npm run test:coverage
+    - npm run build
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+    paths:
+      - frontend/dist/
+      - frontend/coverage/
+    expire_in: 30 days
+
+# Security Scans
+security-scan:
+  stage: security
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    # Trivy filesystem scan
+    - |
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      trivy fs --format json --output trivy-results.json .
+  artifacts:
+    paths:
+      - trivy-results.json
+    expire_in: 30 days
+  allow_failure: true
+
+# Build Docker Images
+build-backend:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $DOCKER_IMAGE_BACKEND:$CI_COMMIT_SHA ./backend
+    - docker build -t $DOCKER_IMAGE_BACKEND:latest ./backend
+    - docker push $DOCKER_IMAGE_BACKEND:$CI_COMMIT_SHA
+    - docker push $DOCKER_IMAGE_BACKEND:latest
+  only:
+    - main
+    - develop
+
+build-frontend:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $DOCKER_IMAGE_FRONTEND:$CI_COMMIT_SHA ./frontend
+    - docker build -t $DOCKER_IMAGE_FRONTEND:latest ./frontend
+    - docker push $DOCKER_IMAGE_FRONTEND:$CI_COMMIT_SHA
+    - docker push $DOCKER_IMAGE_FRONTEND:latest
+  only:
+    - main
+    - develop
+
+# Deploy to Staging
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+  script:
+    - echo "Deploying to staging environment..."
+    - |
+      ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_HOST "
+        cd /opt/soc-platform &&
+        docker-compose pull &&
+        docker-compose up -d --remove-orphans
+      "
+  environment:
+    name: staging
+    url: https://staging.soc-platform.example.com
+  only:
+    - develop
+
+# Deploy to Production
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+  script:
+    - echo "Deploying to production environment..."
+    - |
+      ssh -o StrictHostKeyChecking=no $PROD_USER@$PROD_HOST "
+        cd /opt/soc-platform &&
+        docker-compose pull &&
+        docker-compose up -d --remove-orphans
+      "
+  environment:
+    name: production
+    url: https://soc-platform.example.com
+  when: manual
+  only:
+    - main
+
+# E2E Tests (staging)
+e2e-test:
+  stage: deploy
+  image: mcr.microsoft.com/playwright:v1.40.0-focal
+  needs:
+    - deploy-staging
+  script:
+    - cd frontend
+    - npm ci
+    - npx playwright test --config=playwright.config.staging.ts
+  artifacts:
+    paths:
+      - frontend/test-results/
+    expire_in: 30 days
+  allow_failure: true
+  only:
+    - develop
+
+# Performance Tests
+performance-test:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - deploy-staging
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - |
+      curl -o lighthouse-ci.tgz https://github.com/GoogleChrome/lighthouse-ci/releases/latest/download/lighthouse-ci-linux.tgz
+      tar -xzf lighthouse-ci.tgz
+      ./lhci autorun --upload.target=temporary-public-storage
+  artifacts:
+    paths:
+      - .lighthouseci/
+    expire_in: 30 days
+  allow_failure: true
+  only:
+    - develop

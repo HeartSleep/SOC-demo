@@ -1,0 +1,53 @@
+id: soc-misconfigurations
+info:
+  name: SOC Platform Misconfiguration Detection
+  author: SOC Security Team
+  severity: high
+  description: Detection of common misconfigurations
+  tags: soc,misconfig,custom
+
+requests:
+  - method: GET
+    path:
+      - "{{BaseURL}}/robots.txt"
+      - "{{BaseURL}}/crossdomain.xml"
+      - "{{BaseURL}}/clientaccesspolicy.xml"
+      - "{{BaseURL}}/phpinfo.php"
+      - "{{BaseURL}}/info.php"
+      - "{{BaseURL}}/test.php"
+      - "{{BaseURL}}/elmah.axd"
+      - "{{BaseURL}}/trace.axd"
+      - "{{BaseURL}}/swagger.json"
+      - "{{BaseURL}}/swagger-ui.html"
+      - "{{BaseURL}}/api-docs"
+      - "{{BaseURL}}/v2/api-docs"
+      - "{{BaseURL}}/actuator"
+      - "{{BaseURL}}/actuator/health"
+      - "{{BaseURL}}/metrics"
+      - "{{BaseURL}}/jolokia"
+      - "{{BaseURL}}/heapdump"
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+
+      - type: word
+        words:
+          - "phpinfo()"
+          - "PHP Version"
+          - "Swagger"
+          - "swagger"
+          - "actuator"
+          - "X-Powered-By"
+        condition: or
+        part: body
+
+    extractors:
+      - type: regex
+        name: version
+        regex:
+          - "PHP Version ([0-9.]+)"
+          - "Apache/([0-9.]+)"
+          - "nginx/([0-9.]+)"

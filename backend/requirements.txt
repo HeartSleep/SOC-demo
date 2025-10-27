@@ -1,0 +1,57 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+
+# Database - PostgreSQL
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+alembic==1.13.0
+
+# Database - Connection Pooling
+sqlalchemy[asyncio]==2.0.23
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.1
+cryptography==41.0.7
+python-dotenv==1.0.0
+defusedxml==0.7.1
+
+# Security - Rate Limiting
+slowapi==0.1.9
+limits==3.6.0
+
+# Security - CSRF Protection
+itsdangerous==2.1.2
+
+# Security - MFA/2FA
+pyotp==2.9.0
+qrcode==7.4.2
+
+# Async Support
+httpx==0.25.2
+aiofiles==23.2.1
+
+# WebSocket Support
+websockets==12.0
+
+# Background Jobs - Celery
+celery==5.3.4
+redis==5.0.1
+
+# Monitoring and Logging
+python-json-logger==2.0.7
+psutil==5.9.6
+
+# Utilities
+python-dateutil==2.8.2
+requests==2.31.0
+
+# Performance
+orjson==3.9.10
+redis[hiredis]==5.0.1

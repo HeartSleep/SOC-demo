@@ -1,0 +1,15 @@
+-r base.txt
+
+# Development Tools
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+pre-commit==3.6.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.14
+
+# Debug
+ipython==8.17.2
+debugpy==1.8.0

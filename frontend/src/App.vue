@@ -1,0 +1,25 @@
+<template>
+  <div id="app">
+    <router-view />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { initTheme } = useTheme()
+
+onMounted(() => {
+  initTheme()
+})
+</script>
+
+<style scoped>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+}
+</style>

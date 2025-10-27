@@ -1,0 +1,99 @@
+// Element Plus theme customization
+:root {
+  // Primary colors
+  --el-color-primary: #{$primary-color};
+  --el-color-primary-light-3: #{lighten($primary-color, 30%)};
+  --el-color-primary-light-5: #{lighten($primary-color, 50%)};
+  --el-color-primary-light-7: #{lighten($primary-color, 70%)};
+  --el-color-primary-light-8: #{lighten($primary-color, 80%)};
+  --el-color-primary-light-9: #{lighten($primary-color, 90%)};
+  --el-color-primary-dark-2: #{darken($primary-color, 20%)};
+
+  // Success colors
+  --el-color-success: #{$success-color};
+  --el-color-success-light-3: #{lighten($success-color, 30%)};
+  --el-color-success-light-5: #{lighten($success-color, 50%)};
+  --el-color-success-light-7: #{lighten($success-color, 70%)};
+  --el-color-success-light-8: #{lighten($success-color, 80%)};
+  --el-color-success-light-9: #{lighten($success-color, 90%)};
+  --el-color-success-dark-2: #{darken($success-color, 20%)};
+
+  // Warning colors
+  --el-color-warning: #{$warning-color};
+  --el-color-warning-light-3: #{lighten($warning-color, 30%)};
+  --el-color-warning-light-5: #{lighten($warning-color, 50%)};
+  --el-color-warning-light-7: #{lighten($warning-color, 70%)};
+  --el-color-warning-light-8: #{lighten($warning-color, 80%)};
+  --el-color-warning-light-9: #{lighten($warning-color, 90%)};
+  --el-color-warning-dark-2: #{darken($warning-color, 20%)};
+
+  // Danger colors
+  --el-color-danger: #{$danger-color};
+  --el-color-danger-light-3: #{lighten($danger-color, 30%)};
+  --el-color-danger-light-5: #{lighten($danger-color, 50%)};
+  --el-color-danger-light-7: #{lighten($danger-color, 70%)};
+  --el-color-danger-light-8: #{lighten($danger-color, 80%)};
+  --el-color-danger-light-9: #{lighten($danger-color, 90%)};
+  --el-color-danger-dark-2: #{darken($danger-color, 20%)};
+
+  // Info colors
+  --el-color-info: #{$info-color};
+  --el-color-info-light-3: #{lighten($info-color, 30%)};
+  --el-color-info-light-5: #{lighten($info-color, 50%)};
+  --el-color-info-light-7: #{lighten($info-color, 70%)};
+  --el-color-info-light-8: #{lighten($info-color, 80%)};
+  --el-color-info-light-9: #{lighten($info-color, 90%)};
+  --el-color-info-dark-2: #{darken($info-color, 20%)};
+
+  // Text colors
+  --el-text-color-primary: #{$text-color-primary};
+  --el-text-color-regular: #{$text-color-regular};
+  --el-text-color-secondary: #{$text-color-secondary};
+  --el-text-color-placeholder: #{$text-color-placeholder};
+  --el-text-color-disabled: #{$text-color-placeholder};
+
+  // Border colors
+  --el-border-color: #{$border-color};
+  --el-border-color-light: #{$border-color-light};
+  --el-border-color-lighter: #{$border-color-lighter};
+  --el-border-color-extra-light: #{$border-color-extra-light};
+  --el-border-color-dark: #{darken($border-color, 10%)};
+  --el-border-color-darker: #{darken($border-color, 20%)};
+
+  // Fill colors
+  --el-fill-color: #{$border-color-extra-light};
+  --el-fill-color-light: #{$border-color-lighter};
+  --el-fill-color-lighter: #{lighten($border-color-extra-light, 50%)};
+  --el-fill-color-extra-light: #{lighten($border-color-extra-light, 75%)};
+  --el-fill-color-blank: #{$bg-color};
+  --el-fill-color-dark: #{$border-color-light};
+
+  // Background colors
+  --el-bg-color: #{$bg-color};
+  --el-bg-color-page: #{$bg-color-page};
+  --el-bg-color-overlay: #{$bg-color-overlay};
+
+  // Box shadows
+  --el-box-shadow: #{$box-shadow-base};
+  --el-box-shadow-light: #{$box-shadow-light};
+  --el-box-shadow-dark: #{$box-shadow-dark};
+
+  // Border radius
+  --el-border-radius-base: #{$border-radius-base};
+  --el-border-radius-small: #{$border-radius-small};
+  --el-border-radius-round: #{$border-radius-round};
+  --el-border-radius-circle: #{$border-radius-circle};
+
+  // Font sizes
+  --el-font-size-extra-small: #{$font-size-extra-small};
+  --el-font-size-small: #{$font-size-small};
+  --el-font-size-base: #{$font-size-base};
+  --el-font-size-medium: #{$font-size-medium};
+  --el-font-size-large: #{$font-size-large};
+  --el-font-size-extra-large: #{$font-size-extra-large};
+
+  // Component sizes
+  --el-component-size-large: 40px;
+  --el-component-size: 32px;
+  --el-component-size-small: 24px;
+}

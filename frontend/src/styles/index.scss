@@ -1,0 +1,137 @@
+@import './variables.scss';
+@import './theme.scss';
+@import './animations.scss';
+
+// Reset styles
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-size: $font-size-base;
+  line-height: 1.6;
+  color: $text-color-primary;
+  background-color: $bg-color-page;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Dark theme
+html.dark {
+  color-scheme: dark;
+
+  body {
+    background-color: $dark-bg-color-page;
+    color: $dark-text-color-primary;
+  }
+}
+
+// Common utility classes
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-primary {
+  color: $primary-color !important;
+}
+
+.text-success {
+  color: $success-color !important;
+}
+
+.text-warning {
+  color: $warning-color !important;
+}
+
+.text-danger {
+  color: $danger-color !important;
+}
+
+.text-info {
+  color: $info-color !important;
+}
+
+.bg-primary {
+  background-color: $primary-color !important;
+}
+
+.bg-success {
+  background-color: $success-color !important;
+}
+
+.bg-warning {
+  background-color: $warning-color !important;
+}
+
+.bg-danger {
+  background-color: $danger-color !important;
+}
+
+.bg-info {
+  background-color: $info-color !important;
+}
+
+// Element Plus customization
+.el-button {
+  border-radius: $border-radius-base;
+  font-weight: 500;
+
+  &.is-round {
+    border-radius: $border-radius-round;
+  }
+}
+
+.el-card {
+  border-radius: 8px;
+  border: 1px solid $border-color-light;
+  box-shadow: $box-shadow-light;
+}
+
+.el-table {
+  .el-table__header th {
+    background-color: $bg-color-page;
+    font-weight: 600;
+  }
+}
+
+.el-dialog {
+  border-radius: 8px;
+}
+
+.el-message-box {
+  border-radius: 8px;
+}
+
+// Scrollbar styles
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(144, 147, 153, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(144, 147, 153, 0.5);
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}

@@ -1,0 +1,208 @@
+# Blue-Green Deployment Configuration
+# Configure deployment behavior, thresholds, and rollback conditions
+
+registry: ghcr.io
+image_prefix: soc-platform
+
+environments:
+  blue:
+    backend_port: 8001
+    frontend_port: 3001
+    color: blue
+    resources:
+      backend:
+        memory: "512Mi"
+        cpu: "500m"
+      frontend:
+        memory: "256Mi"
+        cpu: "250m"
+  green:
+    backend_port: 8002
+    frontend_port: 3002
+    color: green
+    resources:
+      backend:
+        memory: "512Mi"
+        cpu: "500m"
+      frontend:
+        memory: "256Mi"
+        cpu: "250m"
+
+health_check:
+  retries: 30
+  interval: 10  # seconds
+  timeout: 5    # seconds
+  endpoints:
+    - path: /health
+      expected_status: 200
+    - path: /api/v1/monitoring/health/detailed
+      expected_status: 200
+
+testing:
+  enabled: true
+  parallel: true
+  timeout: 300  # seconds
+  test_suites:
+    - name: integration
+      script: test_frontend_backend_integration.py
+      critical: true
+    - name: contracts
+      script: test_contracts.py
+      critical: true
+    - name: performance
+      script: performance_profiler.py
+      critical: false
+    - name: security
+      script: security_tests.py
+      critical: false
+
+monitoring:
+  error_threshold: 0.01      # 1% error rate
+  response_time_threshold: 500  # milliseconds
+  monitoring_duration: 120   # seconds
+  metrics_endpoints:
+    - /api/v1/monitoring/metrics
+    - /api/v1/monitoring/health/detailed
+  alerts:
+    - metric: error_rate
+      operator: ">"
+      threshold: 0.02
+      severity: critical
+    - metric: response_time_p95
+      operator: ">"
+      threshold: 1000
+      severity: warning
+    - metric: memory_usage
+      operator: ">"
+      threshold: 90
+      severity: warning
+
+rollback:
+  automatic: true
+  max_rollback_time: 300  # seconds
+  keep_old_version_duration: 600  # seconds
+  conditions:
+    error_rate_exceeded: true
+    health_check_failed: true
+    response_time_exceeded: true
+    test_failed: true
+    manual_trigger: true
+
+traffic_switching:
+  strategy: instant  # Options: instant, gradual, canary
+  gradual_steps:
+    - percentage: 10
+      duration: 60
+    - percentage: 50
+      duration: 120
+    - percentage: 100
+      duration: 0
+  canary:
+    initial_percentage: 5
+    increment: 10
+    interval: 60
+    max_percentage: 100
+
+notifications:
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+  email:
+    enabled: false
+    smtp_server: smtp.gmail.com
+    smtp_port: 587
+    from_address: deployments@soc-platform.com
+    to_addresses:
+      - devops@soc-platform.com
+      - oncall@soc-platform.com
+  pagerduty_key: ${PAGERDUTY_INTEGRATION_KEY}
+  teams_webhook: ${TEAMS_WEBHOOK_URL}
+
+pre_deployment:
+  checks:
+    - name: database_migrations
+      command: "cd backend && alembic upgrade head"
+      critical: true
+    - name: static_assets
+      command: "cd frontend && npm run build"
+      critical: true
+    - name: dependency_check
+      command: "safety check -r backend/requirements.txt"
+      critical: false
+
+post_deployment:
+  tasks:
+    - name: warm_cache
+      command: "python warm_cache.py"
+      delay: 30
+    - name: clear_cdn_cache
+      command: "curl -X POST https://api.cloudflare.com/client/v4/zones/ZONE_ID/purge_cache"
+      delay: 0
+    - name: update_status_page
+      command: "python update_status_page.py --status operational"
+      delay: 0
+
+deployment_windows:
+  enabled: true
+  allowed_hours:
+    weekdays:
+      start: "02:00"
+      end: "06:00"
+    weekends:
+      start: "00:00"
+      end: "23:59"
+  blocked_dates:
+    - "2024-12-24"  # Christmas Eve
+    - "2024-12-25"  # Christmas
+    - "2024-12-31"  # New Year's Eve
+    - "2025-01-01"  # New Year's Day
+
+feature_flags:
+  use_docker_swarm: false
+  use_kubernetes: false
+  enable_autoscaling: false
+  enable_service_mesh: false
+  enable_distributed_tracing: false
+
+backup:
+  enabled: true
+  retention_days: 30
+  backup_before_deployment: true
+  backup_types:
+    - database
+    - configuration
+    - docker_images
+
+security:
+  scan_images: true
+  vulnerability_threshold: "medium"
+  compliance_checks:
+    - cis_benchmark
+    - owasp_top_10
+  secrets_management:
+    provider: "vault"  # Options: vault, aws_secrets_manager, azure_key_vault
+    vault_url: ${VAULT_URL}
+    vault_token: ${VAULT_TOKEN}
+
+logging:
+  level: INFO
+  destinations:
+    - console
+    - file
+    - elasticsearch
+  elasticsearch:
+    url: ${ELASTICSEARCH_URL}
+    index: soc-deployments
+  retention_days: 90
+
+metrics:
+  export_to_prometheus: true
+  prometheus_endpoint: /metrics
+  custom_metrics:
+    - name: deployment_duration
+      type: histogram
+      help: "Duration of deployments in seconds"
+    - name: deployment_success_rate
+      type: gauge
+      help: "Success rate of deployments"
+    - name: rollback_count
+      type: counter
+      help: "Number of rollbacks triggered"

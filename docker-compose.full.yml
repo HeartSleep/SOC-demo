@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: soc_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: soc_user
+      POSTGRES_PASSWORD: soc_password_2024
+      POSTGRES_DB: soc_platform
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - soc_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soc_user -d soc_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存和消息队列
+  redis:
+    image: redis:7-alpine
+    container_name: soc_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password_2024
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - soc_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: soc_backend
+    restart: unless-stopped
+    environment:
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://soc_user:soc_password_2024@postgres:5432/soc_platform
+      - REDIS_URL=redis://:redis_password_2024@redis:6379/0
+      - CELERY_BROKER_URL=redis://:redis_password_2024@redis:6379/1
+      - SECRET_KEY=soc-platform-secret-key-2024
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - soc_network
+    command: >
+      sh -c "
+        sleep 10 &&
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+      "
+
+  # Celery Worker
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: soc_celery_worker
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://soc_user:soc_password_2024@postgres:5432/soc_platform
+      - REDIS_URL=redis://:redis_password_2024@redis:6379/0
+      - CELERY_BROKER_URL=redis://:redis_password_2024@redis:6379/1
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+      - backend
+    networks:
+      - soc_network
+    command: celery -A app.core.celery.celery_app worker --loglevel=info --concurrency=4
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: soc_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - soc_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  soc_network:
+    driver: bridge
