@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-import json
-import asyncio
+from fastapi import APIRouter, HTTPException, Query
 import threading
 import random
 import time

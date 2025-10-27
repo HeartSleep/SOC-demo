@@ -1,8 +1,6 @@
-import asyncio
 import re
-import json
-from typing import List, Dict, Any, Set, Optional, Tuple
-from urllib.parse import urlparse, urljoin
+from typing import List, Dict, Any, Set, Optional
+from urllib.parse import urlparse
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -144,20 +142,19 @@ class APIDiscoveryService:
 
         try:
             # 方法1: 关键字匹配 (传统代码)
-            for keyword in self.base_api_keywords:
-                # 匹配: '/api', "/api", '/api/v1'
-                patterns = [
-                    rf'["\']/({\|'.join(self.base_api_keywords)})[/"\']',
-                    rf'["\']/({\|'.join(self.base_api_keywords)})/[a-z0-9]+["\']',
-                ]
+            # 匹配: '/api', "/api", '/api/v1'
+            keywords_pattern = '|'.join(re.escape(keyword) for keyword in self.base_api_keywords)
+            patterns = [
+                rf'["\'](/(?:{keywords_pattern})(?:/[a-z0-9_-]+)*)["\']',
+                rf'`(/(?:{keywords_pattern})(?:/[a-z0-9_-]+)*)`',
+            ]
 
-                for pattern in patterns:
-                    matches = re.findall(pattern, content, re.IGNORECASE)
-                    for match in matches:
-                        if isinstance(match, tuple):
-                            match = match[0]
-                        path = f"/{match}" if not match.startswith('/') else match
-                        base_api_paths.add(path)
+            for pattern in patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                for match in matches:
+                    normalized_path = self._normalize_base_api_path(match)
+                    if normalized_path:
+                        base_api_paths.add(normalized_path)
 
             # 方法2: 从完整API中提取公共前缀
             all_paths = self._extract_all_paths(content)
@@ -261,6 +258,22 @@ class APIDiscoveryService:
                     common_prefixes.add(prefix)
 
         return common_prefixes
+
+    def _normalize_base_api_path(self, path: str) -> Optional[str]:
+        """规范化基础API路径"""
+        if not path:
+            return None
+
+        normalized = path if path.startswith('/') else f'/{path}'
+        segments = [segment for segment in normalized.strip('/').split('/') if segment]
+
+        if not segments:
+            return None
+
+        if len(segments) == 1:
+            return f"/{segments[0]}"
+
+        return f"/{'/'.join(segments[:2])}"
 
     def _is_valid_api_path(self, path: str) -> bool:
         """检查是否为有效的API路径"""
