@@ -16,6 +16,7 @@ from pathlib import Path
 import re
 import aiohttp
 from app.services.vulnerability_rules import VulnerabilityDetector, Severity
+from app.services.vulnerability_merger import VulnerabilityMerger
 
 logger = logging.getLogger(__name__)
 
@@ -421,29 +422,43 @@ class ScannerEngine:
             tech_results = await self.scan_web_technologies(target)
             results["scan_results"]["technologies"] = tech_results
 
-        # Combine and deduplicate vulnerabilities
-        all_vulns = []
-        seen_vulns = set()
+        # Combine and intelligently deduplicate vulnerabilities using merger
+        vulnerability_merger = VulnerabilityMerger()
 
-        for scan_type in ["nuclei", "pattern_detection"]:
-            if scan_type in results["scan_results"]:
-                for vuln in results["scan_results"][scan_type].get("vulnerabilities", []):
-                    # Create unique key for deduplication
-                    vuln_key = f"{vuln.get('name')}_{vuln.get('host')}_{vuln.get('matched', '')[:50]}"
-                    if vuln_key not in seen_vulns:
-                        vuln["source"] = scan_type
-                        all_vulns.append(vuln)
-                        seen_vulns.add(vuln_key)
+        for scan_name, scan_data in results["scan_results"].items():
+            vulnerabilities = scan_data.get("vulnerabilities", []) if isinstance(scan_data, dict) else []
+            if not vulnerabilities:
+                continue
 
-        results["vulnerabilities"] = all_vulns
-        results["total_vulnerabilities"] = len(all_vulns)
+            timestamp = scan_data.get("timestamp") if isinstance(scan_data, dict) else None
+
+            for vuln in vulnerabilities:
+                if not isinstance(vuln, dict):
+                    continue
+
+                vuln_with_source = vuln.copy()
+                vuln_with_source.setdefault("source", scan_name)
+
+                vulnerability_merger.add_vulnerability(
+                    vuln_with_source,
+                    source=scan_name,
+                    timestamp=timestamp
+                )
+
+        merged_vulnerabilities = vulnerability_merger.get_merged_vulnerabilities()
+        results["vulnerabilities"] = merged_vulnerabilities
+        results["total_vulnerabilities"] = len(merged_vulnerabilities)
 
         # Calculate combined severity breakdown
         severity_count = {}
-        for vuln in all_vulns:
+        for vuln in merged_vulnerabilities:
             severity = vuln.get("severity", "unknown")
-            severity_count[severity] = severity_count.get(severity, 0) + 1
+            severity_key = severity.lower() if isinstance(severity, str) else str(severity)
+            severity_count[severity_key] = severity_count.get(severity_key, 0) + 1
         results["severity_breakdown"] = severity_count
+
+        # Provide merger statistics for analytics/insights
+        results["merger_statistics"] = vulnerability_merger.get_statistics()
 
         return results
 

@@ -136,6 +136,197 @@ const splitLink = split(
 )
 
 /**
+ * Helpers for merging paginated and list data
+ */
+type MergeOptions = {
+  args?: Record<string, any>
+}
+
+const hasCursorArgs = (args?: Record<string, any>) => {
+  if (!args) return false
+  return typeof args.after !== 'undefined' || typeof args.before !== 'undefined'
+}
+
+const shouldResetConnection = (args?: Record<string, any>) => {
+  if (!args) return true
+  if (args.reset === true) return true
+  return !hasCursorArgs(args)
+}
+
+const dedupeEdges = (edges: any[] = []) => {
+  const seen = new Map<string, number>()
+  const result: any[] = []
+
+  edges.forEach((edge) => {
+    if (!edge) return
+
+    let identity: string
+
+    if (edge?.node?.id) {
+      identity = edge.node.id
+    } else if (edge?.node?._id) {
+      identity = edge.node._id
+    } else if (edge?.cursor) {
+      identity = edge.cursor
+    } else {
+      try {
+        identity = JSON.stringify(edge)
+      } catch {
+        identity = String(edge)
+      }
+    }
+
+    if (seen.has(identity)) {
+      const index = seen.get(identity)!
+      const existingEdge = result[index]
+
+      const mergedNode =
+        typeof existingEdge?.node === 'object' &&
+        existingEdge?.node !== null &&
+        typeof edge?.node === 'object' &&
+        edge?.node !== null
+          ? { ...existingEdge.node, ...edge.node }
+          : edge?.node ?? existingEdge?.node
+
+      result[index] = {
+        ...existingEdge,
+        ...edge,
+        node: mergedNode
+      }
+    } else {
+      seen.set(identity, result.length)
+      result.push({
+        ...edge,
+        node:
+          typeof edge?.node === 'object' && edge?.node !== null
+            ? { ...edge.node }
+            : edge?.node
+      })
+    }
+  })
+
+  return result
+}
+
+const mergeConnectionField = (
+  existing: any = { edges: [] },
+  incoming: any,
+  options: MergeOptions = {}
+) => {
+  if (!incoming) {
+    return existing ?? { edges: [] }
+  }
+
+  const args = options.args
+  const existingEdges = existing?.edges ?? []
+  const incomingEdges = incoming?.edges ?? []
+
+  let mergedEdges: any[]
+
+  if (shouldResetConnection(args)) {
+    mergedEdges = incomingEdges
+  } else if (args?.before !== undefined && args.before !== null) {
+    mergedEdges = [...incomingEdges, ...existingEdges]
+  } else {
+    mergedEdges = [...existingEdges, ...incomingEdges]
+  }
+
+  const edges = dedupeEdges(mergedEdges)
+
+  return {
+    ...existing,
+    ...incoming,
+    edges,
+    pageInfo: {
+      ...(existing?.pageInfo ?? {}),
+      ...(incoming?.pageInfo ?? {})
+    },
+    totalCount:
+      typeof incoming?.totalCount === 'number'
+        ? incoming.totalCount
+        : existing?.totalCount
+  }
+}
+
+const dedupeItems = (items: any[] = []) => {
+  const seen = new Map<string, number>()
+  const result: any[] = []
+
+  items.forEach((item) => {
+    if (item === undefined || item === null) {
+      return
+    }
+
+    let identity: string
+
+    if (typeof item === 'object' && item !== null) {
+      if ('id' in item && item.id) {
+        identity = item.id
+      } else if ('__ref' in item && (item as any).__ref) {
+        identity = (item as any).__ref
+      } else {
+        try {
+          identity = JSON.stringify(item)
+        } catch {
+          identity = String(item)
+        }
+      }
+    } else {
+      identity = String(item)
+    }
+
+    if (seen.has(identity)) {
+      const index = seen.get(identity)!
+      const existingItem = result[index]
+
+      if (
+        typeof existingItem === 'object' &&
+        existingItem !== null &&
+        typeof item === 'object' &&
+        item !== null
+      ) {
+        result[index] = {
+          ...existingItem,
+          ...item
+        }
+      } else {
+        result[index] = item
+      }
+    } else {
+      seen.set(identity, result.length)
+      if (typeof item === 'object' && item !== null) {
+        result.push({ ...item })
+      } else {
+        result.push(item)
+      }
+    }
+  })
+
+  return result
+}
+
+const mergeArrayField = (
+  existing: any[] = [],
+  incoming: any[] | undefined,
+  options: MergeOptions = {}
+) => {
+  if (!incoming || incoming.length === 0) {
+    return existing
+  }
+
+  const args = options.args
+  const shouldReset =
+    !args ||
+    args.reset === true ||
+    (typeof args.offset === 'number' && args.offset === 0) ||
+    (typeof args.skip === 'number' && args.skip === 0)
+
+  const combined = shouldReset ? incoming : [...existing, ...incoming]
+
+  return dedupeItems(combined)
+}
+
+/**
  * Create the Apollo Client instance
  */
 export const apolloClient = new ApolloClient({
@@ -149,35 +340,30 @@ export const apolloClient = new ApolloClient({
     typePolicies: {
       Query: {
         fields: {
-          // Paginated fields
+          // Paginated connection fields with proper deduplication
           users: {
             keyArgs: ['role', 'isActive'],
-            merge(existing = { edges: [] }, incoming) {
-              return {
-                ...incoming,
-                edges: [...existing.edges, ...incoming.edges]
-              }
+            merge(existing, incoming, { args }) {
+              return mergeConnectionField(existing, incoming, { args })
             }
           },
           assets: {
             keyArgs: ['assetType', 'criticality', 'tags'],
-            merge(existing = { edges: [] }, incoming) {
-              return {
-                ...incoming,
-                edges: [...existing.edges, ...incoming.edges]
-              }
+            merge(existing, incoming, { args }) {
+              return mergeConnectionField(existing, incoming, { args })
             }
           },
+          // Array fields with proper deduplication
           vulnerabilities: {
             keyArgs: ['assetId', 'severity', 'status'],
-            merge(existing = [], incoming = []) {
-              return [...existing, ...incoming]
+            merge(existing, incoming, { args }) {
+              return mergeArrayField(existing, incoming, { args })
             }
           },
           tasks: {
             keyArgs: ['assignedTo', 'status', 'priority'],
-            merge(existing = [], incoming = []) {
-              return [...existing, ...incoming]
+            merge(existing, incoming, { args }) {
+              return mergeArrayField(existing, incoming, { args })
             }
           }
         }

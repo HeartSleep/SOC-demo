@@ -291,13 +291,54 @@ def mask_sensitive_data(data: str, mask_char: str = "*", visible_chars: int = 4)
     return f"{prefix}{mask_char * middle_length}{suffix}"
 
 
-def deep_merge_dict(dict1: Dict[str, Any], dict2: Dict[str, Any]) -> Dict[str, Any]:
-    """Deep merge two dictionaries"""
+def deep_merge_dict(dict1: Dict[str, Any], dict2: Dict[str, Any], merge_lists: bool = False) -> Dict[str, Any]:
+    """
+    Deep merge two dictionaries with optional list merging
+    
+    Args:
+        dict1: Base dictionary
+        dict2: Dictionary to merge into dict1
+        merge_lists: If True, merge lists instead of replacing them
+    
+    Returns:
+        Merged dictionary
+    """
     result = dict1.copy()
 
     for key, value in dict2.items():
-        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-            result[key] = deep_merge_dict(result[key], value)
+        if key in result:
+            existing_value = result[key]
+            
+            # Handle nested dictionaries
+            if isinstance(existing_value, dict) and isinstance(value, dict):
+                result[key] = deep_merge_dict(existing_value, value, merge_lists)
+            
+            # Handle lists if merge_lists is enabled
+            elif merge_lists and isinstance(existing_value, list) and isinstance(value, list):
+                # Combine and deduplicate lists
+                combined = existing_value + value
+                
+                # Try to deduplicate based on item type
+                if combined and all(isinstance(item, dict) and 'id' in item for item in combined):
+                    # Deduplicate by 'id' field
+                    seen = set()
+                    deduplicated = []
+                    for item in combined:
+                        item_id = item['id']
+                        if item_id not in seen:
+                            seen.add(item_id)
+                            deduplicated.append(item)
+                    result[key] = deduplicated
+                elif combined and all(isinstance(item, (str, int, float, bool)) for item in combined):
+                    # Deduplicate primitive types
+                    result[key] = list(dict.fromkeys(combined))
+                else:
+                    # Cannot deduplicate, just combine
+                    result[key] = combined
+            
+            # Replace with new value
+            else:
+                result[key] = value
         else:
             result[key] = value
 
