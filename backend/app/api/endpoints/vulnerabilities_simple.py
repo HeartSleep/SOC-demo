@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-import json
+from fastapi import APIRouter, HTTPException, Query
 
 from app.core.database_simple import get_database
 from app.core.logging import get_logger

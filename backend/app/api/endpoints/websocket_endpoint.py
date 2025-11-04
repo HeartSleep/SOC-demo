@@ -2,7 +2,7 @@
 WebSocket Endpoints
 Real-time communication endpoints
 """
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from app.core.websocket import manager
 from app.core.logging import get_logger
 from typing import Optional

@@ -4,7 +4,6 @@ Provides Redis-backed caching for expensive operations
 """
 import pickle
 import hashlib
-import json
 from typing import Optional, Any, Callable
 from functools import wraps
 import redis.asyncio as aioredis
