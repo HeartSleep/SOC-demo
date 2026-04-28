@@ -100,9 +100,13 @@ def get_database():
     return async_session_maker
 
 
+# Alias for backward compatibility
+get_db = get_session
+
+
 def is_database_connected():
-    """Check if database is connected"""
-    return database_connected
+    """Check if database is connected - Always return False for demo mode"""
+    return False
 
 
 # Create all tables (will be replaced by Alembic migrations)

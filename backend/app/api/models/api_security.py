@@ -133,7 +133,7 @@ class JSResource(Base):
     extracted_base_paths = Column(ARRAY(String), server_default='{}', nullable=False)
 
     # 元数据
-    metadata = Column(JSON, server_default='{}', nullable=False)
+    resource_metadata = Column(JSON, server_default='{}', nullable=False)
 
     # 时间字段
     discovered_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -200,7 +200,7 @@ class APIEndpoint(Base):
     # }
 
     # 元数据
-    metadata = Column(JSON, server_default='{}', nullable=False)
+    resource_metadata = Column(JSON, server_default='{}', nullable=False)
 
     # 时间字段
     discovered_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -248,7 +248,7 @@ class MicroserviceInfo(Base):
     vulnerability_details = Column(JSON, server_default='[]', nullable=False)
 
     # 元数据
-    metadata = Column(JSON, server_default='{}', nullable=False)
+    resource_metadata = Column(JSON, server_default='{}', nullable=False)
 
     # 时间字段
     discovered_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -329,7 +329,7 @@ class APISecurityIssue(Base):
     resolved_by = Column(UUID(as_uuid=True), nullable=True)
 
     # 元数据
-    metadata = Column(JSON, server_default='{}', nullable=False)
+    resource_metadata = Column(JSON, server_default='{}', nullable=False)
 
     # 时间字段
     discovered_at = Column(DateTime, default=datetime.utcnow, nullable=False)

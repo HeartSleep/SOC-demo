@@ -4,6 +4,18 @@ import type { Asset, AssetFilters, AssetCreateData, AssetUpdateData } from '@/ty
 import { request } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 
+// 通用错误处理函数
+const handleError = (err: unknown, defaultMessage: string): string => {
+  if (err instanceof Error) {
+    return err.message || defaultMessage
+  }
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const errorWithResponse = err as { response?: { data?: { detail?: string } } }
+    return errorWithResponse.response?.data?.detail || defaultMessage
+  }
+  return defaultMessage
+}
+
 export const useAssetStore = defineStore('asset', () => {
   const assets = ref<Asset[]>([])
   const currentAsset = ref<Asset | null>(null)
@@ -11,8 +23,8 @@ export const useAssetStore = defineStore('asset', () => {
   const error = ref<string | null>(null)
 
   // Helper function for error handling
-  const handleError = (err: any, defaultMessage: string) => {
-    const message = err?.response?.data?.detail || err?.message || defaultMessage
+  const handleErrorAndSetState = (err: unknown, defaultMessage: string) => {
+    const message = handleError(err, defaultMessage)
     error.value = message
     ElMessage.error(message)
     console.error('Asset Store Error:', err)

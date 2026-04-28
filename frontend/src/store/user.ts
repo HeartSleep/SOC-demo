@@ -18,13 +18,29 @@ interface UserState {
   token: string | null
   userInfo: UserInfo | null
   permissions: string[]
+  loading: boolean
+  error: string | null
+}
+
+// 通用错误处理函数
+const handleError = (err: unknown, defaultMessage: string): string => {
+  if (err instanceof Error) {
+    return err.message || defaultMessage
+  }
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const errorWithResponse = err as { response?: { data?: { detail?: string } } }
+    return errorWithResponse.response?.data?.detail || defaultMessage
+  }
+  return defaultMessage
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     token: getToken(),
     userInfo: null,
-    permissions: []
+    permissions: [],
+    loading: false,
+    error: null
   }),
 
   getters: {
@@ -36,6 +52,8 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     async login(loginData: { username: string; password: string }) {
+      this.error = null
+      this.loading = true
       try {
         const response = await login(loginData)
 
@@ -49,13 +67,17 @@ export const useUserStore = defineStore('user', {
         router.push('/dashboard')
 
         return response
-      } catch (error: any) {
-        ElMessage.error(error.response?.data?.detail || '登录失败')
-        throw error
+      } catch (err) {
+        this.error = handleError(err, '登录失败')
+        ElMessage.error(this.error)
+        throw err
+      } finally {
+        this.loading = false
       }
     },
 
     async logout() {
+      this.loading = true
       try {
         await logout()
       } catch (error) {
@@ -64,6 +86,8 @@ export const useUserStore = defineStore('user', {
         this.token = null
         this.userInfo = null
         this.permissions = []
+        this.loading = false
+        this.error = null
         removeToken()
         router.push('/login')
         ElMessage.success('已退出登录')
@@ -71,14 +95,19 @@ export const useUserStore = defineStore('user', {
     },
 
     async getUserInfo() {
+      this.error = null
+      this.loading = true
       try {
         const response = await getUserInfo()
         this.userInfo = response
         this.permissions = response.permissions || []
         return response
-      } catch (error) {
+      } catch (err) {
+        this.error = handleError(err, '获取用户信息失败')
         this.logout()
-        throw error
+        throw err
+      } finally {
+        this.loading = false
       }
     },
 
