@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { removeToken } from '@/utils/auth'
 
 export interface LoginParams {
   username: string
@@ -31,11 +32,19 @@ export function login(data: LoginParams) {
   })
 }
 
+/**
+ * 登出函数 - JWT 无状态，客户端清除 token 即可
+ * 后端无需实现 logout 接口
+ */
 export function logout() {
-  return request({
-    url: '/auth/logout',
-    method: 'post'
-  })
+  // 清除本地存储的 token
+  removeToken()
+  // 如果后端有 token 黑名单需求，可以取消注释下面代码
+  // return request({
+  //   url: '/auth/logout',
+  //   method: 'post'
+  // })
+  return Promise.resolve()
 }
 
 export function getUserInfo() {
