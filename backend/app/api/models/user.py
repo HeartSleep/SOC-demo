@@ -91,3 +91,25 @@ class User(Base):
             "is_verified": self.is_verified,
             "mfa_enabled": self.mfa_enabled,
         }
+
+    @classmethod
+    async def find_one(cls, condition):
+        """
+        Find a single user by condition.
+        This is a compatibility method for code expecting MongoDB-like API.
+        """
+        from sqlalchemy import select
+        from app.core.database import async_session_maker
+
+        if async_session_maker is None:
+            return None
+
+        async with async_session_maker() as session:
+            # Handle SQLAlchemy comparison objects
+            if hasattr(condition, '_column_clause'):
+                stmt = select(cls).where(condition)
+            else:
+                stmt = select(cls).where(condition)
+
+            result = await session.execute(stmt)
+            return result.scalars().first()

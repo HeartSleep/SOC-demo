@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 
@@ -42,6 +42,7 @@ router = APIRouter()
 @router.post("/scans", response_model=APIScanTaskResponse)
 @custom_rate_limit("5/minute")  # ✅ 安全修复：每分钟最多5个扫描任务
 async def create_scan_task(
+    request: Request,
     task_data: APIScanTaskCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
