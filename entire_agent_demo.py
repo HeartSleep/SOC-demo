@@ -10,7 +10,7 @@ import re
 from typing import Iterable
 
 _HOSTNAME_RE = re.compile(
-    r"^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?:\.(?!-)[a-z0-9-]{1,63})*\.?$"
+    r"^(?=.{1,253}$)(?!-)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.(?!-)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.?$"
 )
 
 
@@ -30,6 +30,7 @@ def normalize_hostname(value: str) -> str:
     return candidate.rstrip(".")
 
 
+# 归一化并去重，保持首次出现顺序。
 def dedupe_hostnames(values: Iterable[str]) -> list[str]:
     """归一化并去重，保持首次出现的顺序。"""
     seen: dict[str, None] = {}
