@@ -1,0 +1,2 @@
+{"v":1,"agent":"claude-code","cli_version":"0.12.2","type":"user","ts":"2026-10-30T06:58:02.037Z","content":[{"id":"9c0885e2-45b2-450e-ae85-75ace0345539","text":"Reply with exactly: OK"}]}
+{"v":1,"agent":"claude-code","cli_version":"0.12.2","type":"assistant","ts":"2026-10-30T06:58:08.108Z","id":"f2401df5-07d6-4f99-9a3a-dd32dd66757e","cache_write_5m_tokens":0,"cache_write_1h_tokens":0,"content":[{"text":"Failed to authenticate. API Error: 403 This group does not allow /v1/messages dispatch","type":"text"}]}
